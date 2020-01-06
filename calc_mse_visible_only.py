@@ -1,6 +1,7 @@
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.decomposition import PCA
 import statsmodels.api as sm
 import pandas as pd
@@ -75,18 +76,27 @@ for num_timebins in num_timebins_list:
 
         def log_likelihood(curr_weights):
 
-            total_potential = np.matmul(curr_weights, phi) - eta_0 * eta[0, :]
+            # total_potential = np.matmul(curr_weights, phi) - eta_0 * eta[0, :]
 
-            rho[0, :] = rho_0 * np.exp((total_potential - v) / delta_u)
-            LL = np.sum(np.multiply(np.log(rho[0, :]), spikes[0, :]) - rho[0, :]) * dt
+            # rho[0, :] = rho_0 * np.exp((total_potential - v) / delta_u)
+            # LL = np.sum(np.multiply(np.log(rho[0, :]), spikes[0, :]) - rho[0, :]) * dt
+
+            curr_weights = np.reshape(curr_weights, [num_neurons, num_neurons])
+
+            total_potential = np.matmul(curr_weights, phi) - eta_0 * eta
+
+            rho = rho_0 * np.exp((total_potential - v) / delta_u)
+            LL = np.sum(np.multiply(np.log(rho), spikes) - rho) * dt
             return -LL
 
 
 
-        x0 = np.random.normal(loc=0, scale=0.1, size=num_neurons)
+        # x0 = np.random.normal(loc=0, scale=0.1, size=num_neurons)
+        x0 = np.random.normal(loc=0, scale=0.1, size=[num_neurons, num_neurons])
         res = optimize.minimize(log_likelihood, x0, options={'disp': False}, tol=1e-5)
 
-        curr_mse = np.sum((res.x - weights[0, :])**2)
+        # curr_mse = np.sum((res.x - weights[0, :])**2)
+        curr_mse = np.sum((np.reshape(res.x, [num_neurons, num_neurons]) - weights)**2)
         print curr_mse
         curr_mse_list.append(curr_mse)
 
